@@ -37,7 +37,7 @@ where A : VolatileAccess
 impl<A> drv::Uart for PL011<A>
 where A : VolatileAccess
 {
-    fn put(&mut self, ch : u8) {
+    fn put(&self, ch : u8) {
         A::write_u8(self.base + PL011_DR, ch)
     }
 }
