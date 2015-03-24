@@ -3,41 +3,65 @@
 #![feature(core)]
 
 extern crate core;
+
+#[macro_use]
 extern crate titanium;
 
-use titanium::io::{VolatileAccess, Default};
 use titanium::drv;
+use titanium::hw;
 
 const PL011_DR : usize = 0x000;
 const PL011_CR : usize = 0x0c0;
 
-pub struct PL011<A = Default>
-where A : VolatileAccess {
+pub struct PL011 {
     base : usize,
-    _access : A,
 }
 
 impl PL011 {
     pub fn new(base : usize) -> PL011 {
         PL011 {
             base: base,
-            _access: Default,
         }
     }
 }
 
-impl<A> drv::Driver for PL011<A>
-where A : VolatileAccess
+impl drv::Driver for PL011
 {
-    fn init(&mut self) {
-        A::write_u16(self.base + PL011_CR, 1 << 0 | 1 << 8);
+    fn init<W>(&mut self, w : &mut W)
+        where W : titanium::HW
+    {
+        w.write::<u16>(self.base + PL011_CR, 1 << 0 | 1 << 8);
     }
 }
 
-impl<A> drv::Uart for PL011<A>
-where A : VolatileAccess
-{
-    fn put(&self, ch : u8) {
-        A::write_u8(self.base + PL011_DR, ch)
+impl<W> drv::Uart<W> for PL011
+where W : titanium::HW {
+    fn put(&self, w : &mut W, ch : u8) {
+        w.write::<u8>(self.base + PL011_DR, ch)
     }
 }
+
+struct Mock;
+
+impl hw::HW for Mock {
+
+}
+
+
+selftest!(pl011_basic(_bla : &mut drv::uart::UartWriter) {
+
+    use titanium::drv::Driver;
+    use titanium::drv::Uart;
+
+    let mut hw = Mock;
+
+    let base = 0x10000000;
+    let mut pl011 = PL011::new(base);
+
+    pl011.init(&mut hw);
+    pl011.put(&mut hw, 1);
+
+    true
+});
+
+
