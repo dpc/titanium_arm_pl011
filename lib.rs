@@ -48,7 +48,7 @@ impl hw::HW for Mock {
 }
 
 
-selftest!(pl011_basic(_bla : &mut drv::uart::UartWriter) {
+selftest!(fn pl011_basic(_uart) {
 
     use titanium::drv::Driver;
     use titanium::drv::Uart;
